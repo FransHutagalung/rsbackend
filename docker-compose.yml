@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: go_backend_postgres
+    environment:
+      POSTGRES_DB: go_backend_starter
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - go_backend_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Go Backend Application
+  app:
+    build: .
+    container_name: go_backend_app
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password123
+      DB_NAME: go_backend_starter
+      DB_PORT: 5432
+      DB_SSLMODE: disable
+      JWT_SECRET: 4aT$eJ6a5hK3mM9sasDd5fFgGhHjJkKlLmMnNpPqQrRsStTtUuVvWwXxYyZz
+      PORT: 8080
+      GIN_MODE: release
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - go_backend_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  go_backend_network:
+    driver: bridge
